@@ -17,10 +17,6 @@ public class HttpApiProxy<T> implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] params) throws Throwable {
-        // 不是抽象方法
-//        if (!Modifier.isAbstract(method.getModifiers())) {
-//            return method.invoke(proxy, params);
-//        }
         // 普通类类
         Class<?> clazz = method.getDeclaringClass();
         if (clazz.equals(Object.class)) {
