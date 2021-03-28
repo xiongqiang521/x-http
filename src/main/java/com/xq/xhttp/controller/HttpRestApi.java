@@ -27,13 +27,9 @@ public interface HttpRestApi {
             @Data Object data
     );
 
-    @HttpApiPath(path = "/api/{id}", method = HttpMethod.GET)
-    public default String demo3(
-            @PathVal("id") String id,
-            @Param Map<String, String> param,
-            @Data Object data
-    ) {
+    public default String demo3(String id, Map<String, String> param, Object data) {
         return demo2(id, param, data);
     }
+
 
 }

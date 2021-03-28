@@ -20,11 +20,11 @@ public class TestController {
         Map<String, String> data = new HashMap<>();
         data.put("username", "aaa");
         data.put("password", "aaa");
-        ResponseEntity<String> demo = httpRestApi.demo("123", null, data, "token");
-
-        System.out.println(httpRestApi.demo2("321", data, null));
+//        ResponseEntity<String> demo = httpRestApi.demo("123", null, data, "token");
+//
+//        System.out.println(httpRestApi.demo2("321", data, null));
         System.out.println(httpRestApi.demo3("321", data, null));
-        return demo;
+        return null;
     }
 
     @RequestMapping("/api/{id}")

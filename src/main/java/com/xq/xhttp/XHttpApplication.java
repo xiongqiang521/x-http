@@ -4,6 +4,7 @@ import com.xq.xhttp.http.annotation.HttpApiHost;
 import com.xq.xhttp.http.annotation.HttpApiScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @HttpApiScan("com.xq.xhttp.controller")

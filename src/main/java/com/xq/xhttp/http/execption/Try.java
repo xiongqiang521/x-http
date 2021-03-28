@@ -4,21 +4,32 @@ import java.util.function.Function;
 
 /**
  * 捕获 lambda 表达式中的异常
- *
+ * <p>
  * <p/>
  * Try.check(带异常的方法)
  * <code>
- *  list.stream() <br>
- *      .map(Try.check(this::doSomething)) <br>
- *      .filter(Try::isSuccess) <br>
- *      .map(Try::getResult) <br>
- *      .forEach(System.out::println); <br>
+ * list.stream() <br>
+ * .map(Try.check(this::doSomething)) <br>
+ * .filter(Try::isSuccess) <br>
+ * .map(Try::getResult) <br>
+ * .forEach(System.out::println); <br>
  * </code>
  */
 public class Try<T, R> {
     private final Exception ex;
     private final T input;
     private final R result;
+
+    public static <T, R> Function<T, R> ignoreException(CheckedFunction<T, R> function) {
+        return t -> {
+            try {
+                return Try.success(function.apply(t)).getResult();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return null;
+            }
+        };
+    }
 
     public static <T, R> Function<T, Try<T, R>> check(CheckedFunction<T, R> function) {
         return t -> {

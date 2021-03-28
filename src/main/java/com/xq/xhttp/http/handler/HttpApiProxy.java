@@ -1,5 +1,6 @@
 package com.xq.xhttp.http.handler;
 
+import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
 import com.xq.xhttp.http.annotation.*;
 import org.springframework.cglib.proxy.InvocationHandler;
@@ -7,29 +8,51 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpApiProxy<T> implements InvocationHandler {
+    private static final int ALLOWED_MODES = MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED
+            | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC;
+
     private static final Class<Annotation>[] CLASSES = new Class[]{
             Data.class, Header.class, Param.class, PathVal.class
     };
 
+    private final ConcurrentHashMap<Method, MethodHandle> methodHandleMap = new ConcurrentHashMap<>();
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] params) throws Throwable {
+        Class<?> declaringClass = method.getDeclaringClass();
+        if (method.isDefault()) {
+            // 使用map可以提高性能，以后的不需要重复构建对象
+            MethodHandle defaultMethodHandle = methodHandleMap.computeIfAbsent(method, Try.ignoreException(key -> {
+                Constructor<MethodHandles.Lookup> declaredConstructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+                declaredConstructor.setAccessible(true);
+                MethodHandles.Lookup lookup = declaredConstructor.newInstance(declaringClass, ALLOWED_MODES);
+                return lookup.unreflectSpecial(method, declaringClass);
+            }));
+
+            MethodHandle methodHandle = defaultMethodHandle.bindTo(proxy);
+            return methodHandle.invokeWithArguments(params);
+        }
         // 普通类类
-        Class<?> clazz = method.getDeclaringClass();
+        Class<?> clazz = declaringClass;
         if (clazz.equals(Object.class)) {
             throw new XHttpException(String.format("<%s>应该是一个接口"));
         }
         HttpBuild build = HttpBuild.build();
-        classAnnotationParse(method.getDeclaringClass(), build);
+        classAnnotationParse(declaringClass, build);
         methodAnnotationParse(method, build);
 
         paramsAnnotationParse(method, params, build);
         Type type = method.getGenericReturnType();
         // 泛型
-        if (type instanceof ParameterizedType){
+        if (type instanceof ParameterizedType) {
             ParameterizedType returnType = (ParameterizedType) type;
             if (ResponseEntity.class.equals(returnType.getRawType())) {
                 Type[] actualTypeArguments = returnType.getActualTypeArguments();
@@ -57,7 +80,7 @@ public class HttpApiProxy<T> implements InvocationHandler {
         }
         Annotation[] annotations = parameter.getAnnotations();
         if (annotations.length != 1) {
-            throw new XHttpException(String.format("参数<%s>应该有且仅有注解%s中的一个", parameter.getName(), CLASSES));
+            throw new XHttpException(String.format("参数<%s>应该有且仅有注解%s中的一个", parameter.getName(), Arrays.toString(CLASSES)));
         }
 
         Annotation annotation = annotations[0];
@@ -81,7 +104,7 @@ public class HttpApiProxy<T> implements InvocationHandler {
                 build.addPathParam(String.valueOf(data));
             }
         } else {
-            throw new XHttpException(String.format("参数<%s>应该有且仅有注解%s中的一个", parameter.getName(), CLASSES));
+            throw new XHttpException(String.format("参数<%s>应该有且仅有注解%s中的一个", parameter.getName(), Arrays.toString(CLASSES)));
         }
         return build;
     }
