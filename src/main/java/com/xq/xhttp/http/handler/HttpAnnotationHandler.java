@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-@Component
 public class HttpAnnotationHandler
         implements BeanDefinitionRegistryPostProcessor, ApplicationContextAware, ResourceLoaderAware {
     private ApplicationContext applicationContext;

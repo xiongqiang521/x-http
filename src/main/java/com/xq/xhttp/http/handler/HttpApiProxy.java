@@ -19,7 +19,7 @@ public class HttpApiProxy<T> implements InvocationHandler {
     private static final int ALLOWED_MODES = MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED
             | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC;
 
-    private static final Class<Annotation>[] CLASSES = new Class[]{
+    private static final Class<?>[] CLASSES = new Class<?>[]{
             Data.class, Header.class, Param.class, PathVal.class
     };
 
