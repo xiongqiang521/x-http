@@ -1,5 +1,7 @@
 package com.xq.xhttp.http.handler;
 
+import org.springframework.context.annotation.Configuration;
+
 public class HttpApiConfig {
     private String basePackage;
 

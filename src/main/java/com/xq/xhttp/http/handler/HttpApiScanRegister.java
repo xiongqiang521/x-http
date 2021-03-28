@@ -31,7 +31,7 @@ public class HttpApiScanRegister implements ImportBeanDefinitionRegistrar, Resou
         basePackages.add(ClassUtils.getPackageName(HttpApiScanRegister.class.getPackage().getName()));
         beanDefinitionBuilder.getBeanDefinition().setBeanClass(HttpApiConfig.class);
         beanDefinitionBuilder.addPropertyValue("basePackage", StringUtils.collectionToCommaDelimitedString(basePackages));
-        registry.registerBeanDefinition(HttpApiConfig.class.getName(), beanDefinitionBuilder.getBeanDefinition());
+        registry.registerBeanDefinition(HttpApiConfig.class.getName(), beanDefinitionBuilder.getRawBeanDefinition());
 
     }
 
