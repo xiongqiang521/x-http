@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class HttpBuild {
-    private final static RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
+    private final static RestTemplate restTemplate = new RestTemplate(HttpPoolConfiguration.clientHttpRequestFactory());
     private String url = "http://localhost:8080/";
     private String path = "/";
     private Object data = null;
