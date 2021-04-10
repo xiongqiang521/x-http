@@ -20,6 +20,12 @@ public class Try<T, R> {
     private final T input;
     private final R result;
 
+    private Try(Exception ex, T input, R result) {
+        this.ex = ex;
+        this.input = input;
+        this.result = result;
+    }
+
     public static <T, R> Function<T, R> ignoreException(CheckedFunction<T, R> function) {
         return t -> {
             try {
@@ -47,12 +53,6 @@ public class Try<T, R> {
 
     public static <T, R> Try<T, R> exception(Exception exception, T input) {
         return new Try<>(exception, input, null);
-    }
-
-    private Try(Exception ex, T input, R result) {
-        this.ex = ex;
-        this.input = input;
-        this.result = result;
     }
 
     public boolean isException() {

@@ -7,18 +7,23 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.TrustStrategy;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
 
+@Configuration
 public class HttpPoolConfiguration {
+
+    public static RestTemplate restTemplate() {
+        return new RestTemplate(HttpPoolConfiguration.clientHttpRequestFactory());
+    }
 
     public static ClientHttpRequestFactory clientHttpRequestFactory() {
         HttpClientConnectionManager connectionManager = null;
@@ -49,5 +54,15 @@ public class HttpPoolConfiguration {
         connManager.setDefaultMaxPerRoute(16);
         return connManager;
 
+    }
+
+    @Bean
+    public ClientHttpRequestFactory getClientHttpRequestFactory() {
+        return HttpPoolConfiguration.clientHttpRequestFactory();
+    }
+
+    @Bean
+    public RestTemplate getRestTemplate() {
+        return HttpPoolConfiguration.restTemplate();
     }
 }

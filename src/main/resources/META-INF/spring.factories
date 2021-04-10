@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.xq.xhttp.http.handler.HttpConfiguration
+  com.xq.xhttp.http.handler.HttpConfiguration,com.xq.xhttp.http.handler.HttpPoolConfiguration

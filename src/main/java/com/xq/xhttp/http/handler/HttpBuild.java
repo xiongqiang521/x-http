@@ -1,17 +1,12 @@
 package com.xq.xhttp.http.handler;
 
+import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.HttpMessageConverterExtractor;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -20,15 +15,15 @@ import java.util.List;
 import java.util.Map;
 
 public final class HttpBuild {
-    private final static RestTemplate restTemplate = new RestTemplate(HttpPoolConfiguration.clientHttpRequestFactory());
+    private final static RestTemplate restTemplate = HttpPoolConfiguration.restTemplate();
+    private final List<String> pathParams = new ArrayList<>();
+    private final Map<String, String> pathParamMap = new HashMap<>();
+    private final HttpHeaders headers = new HttpHeaders();
     private String url = "http://localhost:8080/";
     private String path = "/";
     private Object data = null;
     private Map<String, String> param = new HashMap<>();
-    private final List<String> pathParams = new ArrayList<>();
-    private final Map<String, String> pathParamMap = new HashMap<>();
     private HttpMethod method = HttpMethod.GET;
-    private final HttpHeaders headers = new HttpHeaders();
 
     private HttpBuild() {
 
@@ -36,65 +31,6 @@ public final class HttpBuild {
 
     public static HttpBuild build() {
         return new HttpBuild();
-    }
-
-    public HttpBuild param(Map<String, String> param) {
-        this.param = param;
-        return this;
-    }
-
-    public HttpBuild host(String host) {
-        this.url = host;
-        return this;
-    }
-
-    public HttpBuild data(Object data) {
-        this.data = data;
-        return this;
-    }
-
-    public HttpBuild path(String path) {
-        this.path = path;
-        return this;
-    }
-
-    public HttpBuild addPathParam(String key, String value) {
-        this.pathParamMap.put(key, value);
-        return this;
-    }
-
-    public HttpBuild addPathParam(String pathParam) {
-        this.pathParams.add(pathParam);
-        return this;
-    }
-
-    public HttpBuild method(HttpMethod method) {
-        this.method = method;
-        return this;
-    }
-
-    public HttpBuild addHeader(String name, String value) {
-        this.headers.add(name, value);
-        return this;
-    }
-
-    public <T> T exchangeObject(Class<T> clazz) {
-        ResponseEntity<T> exchange = exchange(clazz);
-        return exchange.getBody();
-    }
-
-    public <T> ResponseEntity<T> exchange(Class<T> clazz) {
-        HttpEntity<?> httpEntity = new HttpEntity<>(this.data, this.headers);
-        String path = makePath(this.path, this.param, this.pathParams, this.pathParamMap);
-        URI uri = null;
-        try {
-            uri = new URI(this.url + path);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            throw new RuntimeException(
-                    String.format("uri创建错误。host -> %s, path -> %s", this.url, path));
-        }
-        return restTemplate.exchange(uri, this.method, httpEntity, clazz);
     }
 
     private static String makePath(
@@ -151,6 +87,65 @@ public final class HttpBuild {
             }
         }
         return stb;
+    }
+
+    public HttpBuild param(Map<String, String> param) {
+        this.param = param;
+        return this;
+    }
+
+    public HttpBuild host(String host) {
+        this.url = host;
+        return this;
+    }
+
+    public HttpBuild data(Object data) {
+        this.data = data;
+        return this;
+    }
+
+    public HttpBuild path(String path) {
+        this.path = path;
+        return this;
+    }
+
+    public HttpBuild addPathParam(String key, String value) {
+        this.pathParamMap.put(key, value);
+        return this;
+    }
+
+    public HttpBuild addPathParam(String pathParam) {
+        this.pathParams.add(pathParam);
+        return this;
+    }
+
+    public HttpBuild method(HttpMethod method) {
+        this.method = method;
+        return this;
+    }
+
+    public HttpBuild addHeader(String name, String value) {
+        this.headers.add(name, value);
+        return this;
+    }
+
+    public <T> T exchangeObject(Class<T> clazz) {
+        ResponseEntity<T> exchange = exchange(clazz);
+        return exchange.getBody();
+    }
+
+    public <T> ResponseEntity<T> exchange(Class<T> clazz) {
+        HttpEntity<?> httpEntity = new HttpEntity<>(this.data, this.headers);
+        String path = makePath(this.path, this.param, this.pathParams, this.pathParamMap);
+        URI uri = null;
+        try {
+            uri = new URI(this.url + path);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            throw new XHttpException(String.format("uri创建错误。host -> %s, path -> %s", this.url, path));
+        }
+        ResponseEntity<T> exchange = restTemplate.exchange(uri, this.method, httpEntity, clazz);
+        return ResponseEntity.status(exchange.getStatusCode()).body(exchange.getBody());
     }
 
 
