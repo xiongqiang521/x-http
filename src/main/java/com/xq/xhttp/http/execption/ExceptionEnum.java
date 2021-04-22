@@ -1,7 +1,7 @@
 package com.xq.xhttp.http.execption;
 
 public enum ExceptionEnum {
-    NOT_FIND("E0010", "123"),
+    REMOTE_EXCEPTION("E0010", "remote http service fail."),
     ;
 
     private final String code;
@@ -10,5 +10,13 @@ public enum ExceptionEnum {
     ExceptionEnum(String code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
     }
 }
