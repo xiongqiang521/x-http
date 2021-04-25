@@ -5,6 +5,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -43,7 +44,7 @@ public class HttpPoolConfiguration {
         SSLContext sslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(null, (chain, authType) -> true)
                 .build();
-        SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext);
+        SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new PlainConnectionSocketFactory())
                 .register("https", sslSocketFactory)

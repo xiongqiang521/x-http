@@ -4,6 +4,10 @@ public class XHttpException extends RuntimeException {
     private String code;
     private String message;
 
+    public XHttpException(String message) {
+        this.code = "E0000";
+        this.message = message;
+    }
     public XHttpException(String code, String message) {
         this.code = code;
         this.message = message;
