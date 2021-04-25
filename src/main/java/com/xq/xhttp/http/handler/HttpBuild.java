@@ -61,7 +61,9 @@ public final class HttpBuild {
         StringBuffer sb = new StringBuffer(path);
         sb.append("?");
         param.forEach((key, val) -> {
-            sb.append(key).append("=").append(val).append("&");
+            if (val != null) {
+                sb.append(key).append("=").append(val).append("&");
+            }
         });
         return sb.toString();
     }
