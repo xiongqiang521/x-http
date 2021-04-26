@@ -1,9 +1,12 @@
 package com.xq.xhttp.http.handler;
 
 import com.xq.xhttp.http.annotation.*;
+import com.xq.xhttp.http.demo.HttpHostInterface;
+import com.xq.xhttp.http.execption.ExceptionEnum;
 import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.cglib.proxy.InvocationHandler;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 
@@ -14,6 +17,8 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpApiProxy<T> implements InvocationHandler {
     private static final int ALLOWED_MODES = MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED
@@ -147,10 +152,53 @@ public class HttpApiProxy<T> implements InvocationHandler {
      */
     private HttpBuild classAnnotationParse(Class<?> clazz, HttpBuild build) {
         HttpApiHost httpApiHost = clazz.getAnnotation(HttpApiHost.class);
-        if (httpApiHost != null) {
-            build.host(checkBlank(httpApiHost.value(), httpApiHost.host()));
+        if (httpApiHost == null) {
+            return build;
         }
-        return build;
+
+        // 优先使用 classType 类型
+        Class<? extends HttpHostInterface> classType = httpApiHost.getClassType();
+
+        try {
+            HttpHostInterface httpHostInterface = classType.newInstance();
+            String host = httpHostInterface.getHost();
+            if (host == null) {
+                host = checkBlank(httpApiHost.value(), httpApiHost.host());
+            }
+            // 处理配置请求中 ${} 的值
+            host = makeHostEnv(host);
+            return build.host(host);
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new XHttpException(ExceptionEnum.ILLEGAL_PARAMETER_EXCEPTION,
+                    String.format("value of host <%s> fail to resolve", httpApiHost));
+        }
+    }
+
+    /**
+     * 处理 ${}表达式的值
+     * 相当于使用spring的@Value("${}")，目前仅支持${}写法
+     *
+     * @param host
+     * @return
+     */
+    private String makeHostEnv(String host) {
+        Pattern pattern = Pattern.compile("\\$\\{([a-zA-Z0-9.]+)\\}");
+        Environment environment = HttpConfiguration.getApplicationContext().getEnvironment();
+
+        Matcher matcher = pattern.matcher(host);
+        while (matcher.find()) {
+            String value = matcher.group(1);
+            String property = environment.getProperty(value);
+            if (!StringUtils.hasText(property)) {
+                throw new XHttpException(ExceptionEnum.ILLEGAL_PARAMETER_EXCEPTION,
+                        String.format("value of host <%s> fail to resolve", host));
+            }
+            host = host.replace(String.format("${%s}", value), property);
+            matcher = pattern.matcher(host);
+        }
+
+        return host;
     }
 
     /**

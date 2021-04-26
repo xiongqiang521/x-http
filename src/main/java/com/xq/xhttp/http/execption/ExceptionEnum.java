@@ -2,6 +2,7 @@ package com.xq.xhttp.http.execption;
 
 public enum ExceptionEnum {
     REMOTE_EXCEPTION("E0010", "remote http service fail."),
+    ILLEGAL_PARAMETER_EXCEPTION("E0011", "illegal parameter."),
     ;
 
     private final String code;

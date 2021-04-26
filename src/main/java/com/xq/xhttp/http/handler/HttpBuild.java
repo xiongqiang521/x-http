@@ -19,7 +19,7 @@ public final class HttpBuild {
     private final List<String> pathParams = new ArrayList<>();
     private final Map<String, String> pathParamMap = new HashMap<>();
     private final HttpHeaders headers = new HttpHeaders();
-    private String url = "http://localhost:8080/";
+    private String host = "http://localhost:8080";
     private String path = "/";
     private Object data = null;
     private Map<String, String> param = new HashMap<>();
@@ -97,7 +97,7 @@ public final class HttpBuild {
     }
 
     public HttpBuild host(String host) {
-        this.url = host;
+        this.host = host;
         return this;
     }
 
@@ -141,10 +141,10 @@ public final class HttpBuild {
         String path = makePath(this.path, this.param, this.pathParams, this.pathParamMap);
         URI uri = null;
         try {
-            uri = new URI(this.url + path);
+            uri = new URI(this.host + path);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            throw new XHttpException(String.format("uri创建错误。host -> %s, path -> %s", this.url, path));
+            throw new XHttpException(String.format("uri创建错误。host -> %s, path -> %s", this.host, path));
         }
         ResponseEntity<T> exchange = restTemplate.exchange(uri, this.method, httpEntity, clazz);
         return ResponseEntity.status(exchange.getStatusCode()).body(exchange.getBody());
