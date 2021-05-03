@@ -15,5 +15,5 @@ public @interface HttpApiHost {
     @AliasFor("value")
     String host() default "";
 
-    Class<? extends HttpHostInterface> getClassType() default HttpHostInterface.DefaultHttpHostImpl.class;
+    Class<? extends HttpHostInterface> classType() default HttpHostInterface.DefaultHttpHostImpl.class;
 }

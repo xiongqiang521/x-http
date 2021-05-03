@@ -1,5 +1,6 @@
 package com.xq.xhttp.http.handler;
 
+import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,10 +10,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class HttpBuild {
     private final static RestTemplate restTemplate = HttpPoolConfiguration.restTemplate();
@@ -21,8 +24,8 @@ public final class HttpBuild {
     private final HttpHeaders headers = new HttpHeaders();
     private String host = "http://localhost:8080";
     private String path = "/";
-    private Object data = null;
-    private Map<String, String> param = new HashMap<>();
+    private Object body = null;
+    private Map<String, String> queryParam = new HashMap<>();
     private HttpMethod method = HttpMethod.GET;
 
     private HttpBuild() {
@@ -35,7 +38,7 @@ public final class HttpBuild {
 
     private static String makePath(
             String path,
-            Map<String, String> param,
+            Map<String, String> queryParam,
             List<String> pathParams,
             Map<String, String> pathParamMap) {
 
@@ -55,17 +58,15 @@ public final class HttpBuild {
             }
             path = tmp;
         }
-        if (param == null) {
+        if (queryParam == null) {
             return path;
         }
-        StringBuffer sb = new StringBuffer(path);
-        sb.append("?");
-        param.forEach((key, val) -> {
-            if (val != null) {
-                sb.append(key).append("=").append(val).append("&");
-            }
-        });
-        return sb.toString();
+
+        return queryParam.entrySet().stream()
+                .map(Try.throwException(
+                        entry -> String.format("%s=%s", entry.getKey(), URLEncoder.encode(entry.getValue(), "UTF-8")),
+                        new RuntimeException()))
+                .collect(Collectors.joining("&", path + "?", ""));
     }
 
     /**
@@ -91,8 +92,8 @@ public final class HttpBuild {
         return stb;
     }
 
-    public HttpBuild param(Map<String, String> param) {
-        this.param = param;
+    public HttpBuild queryParam(Map<String, String> queryParam) {
+        this.queryParam = queryParam;
         return this;
     }
 
@@ -101,8 +102,8 @@ public final class HttpBuild {
         return this;
     }
 
-    public HttpBuild data(Object data) {
-        this.data = data;
+    public HttpBuild body(Object body) {
+        this.body = body;
         return this;
     }
 
@@ -137,8 +138,8 @@ public final class HttpBuild {
     }
 
     public <T> ResponseEntity<T> exchange(Class<T> clazz) {
-        HttpEntity<?> httpEntity = new HttpEntity<>(this.data, this.headers);
-        String path = makePath(this.path, this.param, this.pathParams, this.pathParamMap);
+        HttpEntity<?> httpEntity = new HttpEntity<>(this.body, this.headers);
+        String path = makePath(this.path, this.queryParam, this.pathParams, this.pathParamMap);
         URI uri = null;
         try {
             uri = new URI(this.host + path);

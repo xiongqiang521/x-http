@@ -26,7 +26,7 @@ maven install
 
 ### SpringBoot启动类 添加注解
 
-@
+@HttpApiScan("远程接口api的包路径")
 
 ### 项目中创建接口调用远程http接口
 
@@ -59,6 +59,25 @@ public interface HttpRestApi {
 - @Data为请求体，内部会json化此对象，尽量使用对象类型，不要使用json字符串。get、delete请求中此参数没用
 - @Header请求头，key-value形式。与@HttpApiHeader作用类似，但此此处value为参数可变
   返回结果支持ResponseEntity<T>和对象类型
+
+@HttpApiHost 中如果 classType 有值，优先使用 HttpHostInterface 的实现类 getHost方法。`@HttpApiHost(classType=RemoteHost.class)`可实现根据方法动态获取host
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+@Component
+public class RemoteHost implements HttpHostInterface {
+  @Autowired
+  private Environment environment;
+  
+  @Override
+  public String getHost() {
+    return environment.getProperty("host", "https://github.com");
+  }
+}
+```
 
 ### service中调用
 

@@ -1,11 +1,11 @@
 package com.xq.xhttp.http.handler;
 
 import com.xq.xhttp.http.annotation.*;
-import com.xq.xhttp.http.demo.HttpHostInterface;
 import com.xq.xhttp.http.execption.ExceptionEnum;
 import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.cglib.proxy.InvocationHandler;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -25,7 +25,7 @@ public class HttpApiProxy<T> implements InvocationHandler {
             | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC;
 
     private static final Class<?>[] CLASSES = new Class<?>[]{
-            Data.class, Header.class, Param.class, PathVal.class
+            Body.class, Header.class, QueryParam.class, PathVal.class
     };
 
     private final ConcurrentHashMap<Method, MethodHandle> methodHandleMap = new ConcurrentHashMap<>();
@@ -90,14 +90,14 @@ public class HttpApiProxy<T> implements InvocationHandler {
 
         Annotation annotation = annotations[0];
 
-        if (annotation instanceof Data) {
-            build.data(data);
+        if (annotation instanceof Body) {
+            build.body(data);
         } else if (annotation instanceof Header) {
             Header header = (Header) annotation;
             build.addHeader(header.value(), String.valueOf(data));
-        } else if (annotation instanceof Param) {
+        } else if (annotation instanceof QueryParam) {
             if (data instanceof Map) {
-                build.param((Map<String, String>) data);
+                build.queryParam((Map<String, String>) data);
             } else {
                 throw new XHttpException(String.format("注解Param的参数<%s>类型应该是 Map<String, String>", parameter.getName()));
             }
@@ -157,10 +157,15 @@ public class HttpApiProxy<T> implements InvocationHandler {
         }
 
         // 优先使用 classType 类型
-        Class<? extends HttpHostInterface> classType = httpApiHost.getClassType();
+        Class<? extends HttpHostInterface> classType = httpApiHost.classType();
 
         try {
-            HttpHostInterface httpHostInterface = classType.newInstance();
+            // 先看spring容器中是否有对应的class对象，没有就创建
+            ApplicationContext applicationContext = HttpConfiguration.getApplicationContext();
+            HttpHostInterface httpHostInterface = applicationContext.getBean(classType);
+            if (httpHostInterface == null) {
+                httpHostInterface = classType.newInstance();
+            }
             String host = httpHostInterface.getHost();
             if (host == null) {
                 host = checkBlank(httpApiHost.value(), httpApiHost.host());

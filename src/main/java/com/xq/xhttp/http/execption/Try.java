@@ -37,6 +37,17 @@ public class Try<T, R> {
         };
     }
 
+    public static <T, R> Function<T, R> throwException(CheckedFunction<T, R> function, RuntimeException runtimeException) {
+        return t -> {
+            try {
+                return Try.success(function.apply(t)).getResult();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw runtimeException;
+            }
+        };
+    }
+
     public static <T, R> Function<T, Try<T, R>> check(CheckedFunction<T, R> function) {
         return t -> {
             try {
@@ -47,11 +58,11 @@ public class Try<T, R> {
         };
     }
 
-    public static <T, R> Try<T, R> success(R result) {
+    private static <T, R> Try<T, R> success(R result) {
         return new Try<>(null, null, result);
     }
 
-    public static <T, R> Try<T, R> exception(Exception exception, T input) {
+    private static <T, R> Try<T, R> exception(Exception exception, T input) {
         return new Try<>(exception, input, null);
     }
 
