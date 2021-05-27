@@ -129,16 +129,20 @@ public class HttpApiProxy<T> implements InvocationHandler {
             build.method(httpApiHost.method());
         }
 
-        // 处理HttpApiHeader注解，可能有多个
-        HttpApiHeaders annotation = method.getAnnotation(HttpApiHeaders.class);
-        if (annotation == null) {
-            return build;
-        }
-        HttpApiHeader[] HttpApiHeaders = annotation.value();
+        // 处理HttpApiHeader注解，@Repeatable在单个HttpApiHeader时不会封装进HttpApiHeaders
         HttpApiHeader httpApiHeader = method.getAnnotation(HttpApiHeader.class);
-        for (HttpApiHeader apiHeader : HttpApiHeaders) {
-            build.addHeader(apiHeader.key(), apiHeader.value());
+        if (httpApiHeader != null) {
+            build.addHeader(httpApiHeader.key(), httpApiHeader.value());
         }
+
+        // 处理HttpApiHeader注解，可能有多个
+        HttpApiHeaders HttpApiHeaders = method.getAnnotation(HttpApiHeaders.class);
+        if (HttpApiHeaders != null) {
+            for (HttpApiHeader apiHeader : HttpApiHeaders.value()) {
+                build.addHeader(apiHeader.key(), apiHeader.value());
+            }
+        }
+
         return build;
     }
 

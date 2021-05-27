@@ -1,5 +1,6 @@
 package com.xq.xhttp.http.handler;
 
+import com.xq.xhttp.http.execption.CheckedFunction;
 import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.http.HttpEntity;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class HttpBuild {
@@ -67,29 +69,6 @@ public final class HttpBuild {
                         entry -> String.format("%s=%s", entry.getKey(), URLEncoder.encode(entry.getValue(), "UTF-8")),
                         new RuntimeException()))
                 .collect(Collectors.joining("&", path + "?", ""));
-    }
-
-    /**
-     * 实现StringBuilder的replaceAll
-     *
-     * @param stb
-     * @param oldStr 被替换的字符串
-     * @param newStr 替换oldStr
-     * @return
-     */
-    public static StringBuffer replaceAll(StringBuffer stb, String oldStr, String newStr) {
-        if (stb == null || oldStr == null || newStr == null || stb.length() == 0 || oldStr.length() == 0)
-            return stb;
-        int index = stb.indexOf(oldStr);
-        if (index > -1 && !oldStr.equals(newStr)) {
-            int lastIndex = 0;
-            while (index > -1) {
-                stb.replace(index, index + oldStr.length(), newStr);
-                lastIndex = index + newStr.length();
-                index = stb.indexOf(oldStr, lastIndex);
-            }
-        }
-        return stb;
     }
 
     public HttpBuild queryParam(Map<String, String> queryParam) {
