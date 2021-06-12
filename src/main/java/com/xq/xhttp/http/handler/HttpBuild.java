@@ -1,12 +1,9 @@
 package com.xq.xhttp.http.handler;
 
-import com.xq.xhttp.http.execption.CheckedFunction;
 import com.xq.xhttp.http.execption.Try;
 import com.xq.xhttp.http.execption.XHttpException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -16,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class HttpBuild {
@@ -29,6 +25,9 @@ public final class HttpBuild {
     private Object body = null;
     private Map<String, String> queryParam = new HashMap<>();
     private HttpMethod method = HttpMethod.GET;
+
+    // 是否为表单提交，请提踢的类型有区别
+    private boolean isForm = false;
 
     private HttpBuild() {
 
@@ -81,6 +80,45 @@ public final class HttpBuild {
         return this;
     }
 
+    public HttpBuild get() {
+        this.method = HttpMethod.GET;
+        return this;
+    }
+
+    public HttpBuild delete() {
+        this.method = HttpMethod.DELETE;
+        return this;
+    }
+
+    public HttpBuild post(Object body) {
+        this.method = HttpMethod.POST;
+        this.body = body;
+        return this;
+    }
+
+    public HttpBuild put(Object body) {
+        this.method = HttpMethod.PUT;
+        this.body = body;
+        return this;
+    }
+
+    /**
+     * 请使用 post()    get()   put()   delete()
+     *
+     * @param method
+     * @return
+     */
+    @Deprecated
+    public HttpBuild method(HttpMethod method) {
+        this.method = method;
+        return this;
+    }
+
+    /**
+     * @param body
+     * @return
+     */
+    @Deprecated
     public HttpBuild body(Object body) {
         this.body = body;
         return this;
@@ -101,11 +139,6 @@ public final class HttpBuild {
         return this;
     }
 
-    public HttpBuild method(HttpMethod method) {
-        this.method = method;
-        return this;
-    }
-
     public HttpBuild addHeader(String name, String value) {
         this.headers.add(name, value);
         return this;
@@ -117,6 +150,12 @@ public final class HttpBuild {
     }
 
     public <T> ResponseEntity<T> exchange(Class<T> clazz) {
+        // 是否为表单提交
+        if (MediaType.APPLICATION_FORM_URLENCODED.equalsTypeAndSubtype(this.headers.getContentType())
+                && !(this.body instanceof MultiValueMap)) {
+            throw new XHttpException("表单提交时body的类型应为MultiValueMap");
+        }
+
         HttpEntity<?> httpEntity = new HttpEntity<>(this.body, this.headers);
         String path = makePath(this.path, this.queryParam, this.pathParams, this.pathParamMap);
         URI uri = null;

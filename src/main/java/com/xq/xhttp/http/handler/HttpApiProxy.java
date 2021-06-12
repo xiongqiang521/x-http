@@ -7,6 +7,8 @@ import com.xq.xhttp.http.execption.XHttpException;
 import org.springframework.cglib.proxy.InvocationHandler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 
@@ -46,8 +48,7 @@ public class HttpApiProxy<T> implements InvocationHandler {
             return methodHandle.invokeWithArguments(params);
         }
         // 普通类类
-        Class<?> clazz = declaringClass;
-        if (clazz.equals(Object.class)) {
+        if (declaringClass.equals(Object.class)) {
             throw new XHttpException(String.format("<%s>应该是一个接口"));
         }
         HttpBuild build = HttpBuild.build();
@@ -127,6 +128,14 @@ public class HttpApiProxy<T> implements InvocationHandler {
         if (httpApiHost != null) {
             build.path(checkBlank(httpApiHost.value(), httpApiHost.path()));
             build.method(httpApiHost.method());
+        }
+
+        // 处理HttpPostFormatApi注解
+        HttpPostFormatApi httpPostFormatApi = method.getAnnotation(HttpPostFormatApi.class);
+        if (httpPostFormatApi != null) {
+            build.path(checkBlank(httpPostFormatApi.value(), httpPostFormatApi.path()));
+            build.method(HttpMethod.POST);
+            build.addHeader("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         }
 
         // 处理HttpApiHeader注解，@Repeatable在单个HttpApiHeader时不会封装进HttpApiHeaders
