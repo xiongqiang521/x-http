@@ -46,7 +46,7 @@ public class HttpPoolConfiguration {
                 .build();
         SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", new PlainConnectionSocketFactory())
+                .register("http", PlainConnectionSocketFactory.INSTANCE)
                 .register("https", sslSocketFactory)
                 .build();
 
