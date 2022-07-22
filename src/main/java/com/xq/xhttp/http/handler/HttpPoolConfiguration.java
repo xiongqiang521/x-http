@@ -11,6 +11,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -20,13 +24,22 @@ import org.springframework.web.client.RestTemplate;
 import javax.net.ssl.SSLContext;
 
 @Configuration
-public class HttpPoolConfiguration {
+public class HttpPoolConfiguration implements ApplicationContextAware {
+
+    private static RestTemplate restTemplate;
 
     public static RestTemplate restTemplate() {
-        return new RestTemplate(HttpPoolConfiguration.clientHttpRequestFactory());
+        return restTemplate;
     }
 
-    public static ClientHttpRequestFactory clientHttpRequestFactory() {
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        HttpPoolConfiguration.restTemplate = applicationContext.getBean(RestTemplate.class);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ClientHttpRequestFactory getClientHttpRequestFactory() {
         HttpClientConnectionManager connectionManager = null;
         try {
             connectionManager = poolingHttpClientConnectionManager();
@@ -40,7 +53,13 @@ public class HttpPoolConfiguration {
         return new HttpComponentsClientHttpRequestFactory(httpClient);
     }
 
-    public static HttpClientConnectionManager poolingHttpClientConnectionManager() throws Exception {
+    @Bean
+    @ConditionalOnMissingBean
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate(getClientHttpRequestFactory());
+    }
+
+    public HttpClientConnectionManager poolingHttpClientConnectionManager() throws Exception {
         SSLContext sslContext = SSLContextBuilder.create()
                 .loadTrustMaterial(null, (chain, authType) -> true)
                 .build();
@@ -55,15 +74,5 @@ public class HttpPoolConfiguration {
         connManager.setDefaultMaxPerRoute(16);
         return connManager;
 
-    }
-
-    @Bean
-    public ClientHttpRequestFactory getClientHttpRequestFactory() {
-        return HttpPoolConfiguration.clientHttpRequestFactory();
-    }
-
-    @Bean
-    public RestTemplate getRestTemplate() {
-        return HttpPoolConfiguration.restTemplate();
     }
 }
