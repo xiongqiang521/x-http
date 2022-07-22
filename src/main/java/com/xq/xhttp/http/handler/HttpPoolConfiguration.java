@@ -22,6 +22,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class HttpPoolConfiguration implements ApplicationContextAware {
@@ -48,6 +49,7 @@ public class HttpPoolConfiguration implements ApplicationContextAware {
         }
         CloseableHttpClient httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
+                .setConnectionTimeToLive(3, TimeUnit.SECONDS)
                 .disableAutomaticRetries()
                 .build();
         return new HttpComponentsClientHttpRequestFactory(httpClient);
